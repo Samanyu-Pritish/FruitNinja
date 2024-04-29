@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fruit Ninja</title>
+<style>
+    /* CSS styles for the game */
+    body {
+        margin: 0;
+        padding: 0;
+        background-image: url('bg.jpeg');
+        background-size: cover;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+    }
+    #gameCanvas {
+        border: 2px solid black;
+    }
+</style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="1700" height="800"></canvas>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Load images and sounds
+    const appleImage = new Image();
+    appleImage.src = 'apple.jpeg';
+    const watermelonImage = new Image();
+    watermelonImage.src = 'watermelon.jpeg';
+    const mangoImage = new Image();
+    mangoImage.src = 'mango.png';
+    const bomImage = new Image();
+    bomImage.src = 'bom.jpeg';
+
+    const cutSound = new Audio('cut.mp3');
+    const bomSound = new Audio('bom.mp3');
+
+    // Game variables
+    let fruits = [];
+    let bombs = [];
+    let score = 0;
+
+    // Event listener for mouse move
+    canvas.addEventListener('mousemove', handleMouseMove);
+
+    function handleMouseMove(event) {
+        const mouseX = event.clientX - canvas.getBoundingClientRect().left;
+        const mouseY = event.clientY - canvas.getBoundingClientRect().top;
+
+        // Check if mouse hovers over fruits
+        fruits.forEach((fruit, index) => {
+            if (
+                mouseX > fruit.x &&
+                mouseX < fruit.x + fruit.width &&
+                mouseY > fruit.y &&
+                mouseY < fruit.y + fruit.height
+            ) {
+                cutFruit(index);
+            }
+        });
+
+        // Check if mouse hovers over bombs
+        bombs.forEach((bomb, index) => {
+            if (
+                mouseX > bomb.x &&
+                mouseX < bomb.x + bomb.width &&
+                mouseY > bomb.y &&
+                mouseY < bomb.y + bomb.height
+            ) {
+                blastBomb(index);
+            }
+        });
+    }
+
+    // Create random fruits
+    function createFruit() {
+        const randomX = Math.random() * (canvas.width - 100);
+        const randomFruit = Math.random();
+        let fruit;
+        if (randomFruit < 0.4) {
+            fruit = { x: randomX, y: canvas.height, width: 50, height: 50, image: appleImage };
+        } else if (randomFruit < 0.7) {
+            fruit = { x: randomX, y: canvas.height, width: 80, height: 80, image: watermelonImage };
+        } else {
+            fruit = { x: randomX, y: canvas.height, width: 60, height: 60, image: mangoImage };
+        }
+        fruits.push(fruit);
+    }
+
+    // Create random bombs
+    function createBomb() {
+        const randomX = Math.random() * (canvas.width - 100);
+        const bomb = { x: randomX, y: canvas.height, width: 50, height: 50, image: bomImage };
+        bombs.push(bomb);
+    }
+
+    // Cut fruit function
+    function cutFruit(index) {
+        cutSound.play();
+        score += 10;
+        fruits.splice(index, 1);
+    }
+
+    // Blast bomb function
+    function blastBomb(index) {
+        bomSound.play();
+        score -= 20;
+        bombs.splice(index, 1);
+    }
+
+    // Update game state
+    function update() {
+        fruits.forEach(fruit => {
+            fruit.y -= 3;
+        });
+
+        bombs.forEach(bomb => {
+            bomb.y -= 3;
+        });
+
+        // Create new fruits and bombs
+        if (Math.random() < 0.02) {
+            createFruit();
+        }
+        if (Math.random() < 0.005) {
+            createBomb();
+        }
+
+        // Remove fruits and bombs that go off the screen
+        fruits = fruits.filter(fruit => fruit.y + fruit.height > 0);
+        bombs = bombs.filter(bomb => bomb.y + bomb.height > 0);
+    }
+
+    // Draw game objects
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        fruits.forEach(fruit => {
+            ctx.drawImage(fruit.image, fruit.x, fruit.y, fruit.width, fruit.height);
+        });
+
+        bombs.forEach(bomb => {
+            ctx.drawImage(bomb.image, bomb.x, bomb.y, bomb.width, bomb.height);
+        });
+
+        // Display score
+        ctx.fillStyle = 'white';
+        ctx.font = '24px Arial';
+        ctx.fillText(`Score: ${score}`, 10, 30);
+    }
+
+    // Game loop
+    function gameLoop() {
+        update();
+        draw();
+        requestAnimationFrame(gameLoop);
+    }
+
+    // Start the game loop
+    gameLoop();
+</script>
+</body>
+</html>
